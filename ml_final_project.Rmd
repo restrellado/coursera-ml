@@ -1,0 +1,12 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+### How the Model Was Built
+
+### Cross Validation 
+
+### Expected Out of Sample Error 
+
+### Predictions on Test Cases
