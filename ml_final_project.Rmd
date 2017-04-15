@@ -1,11 +1,30 @@
 ---
 title: "R Notebook"
-output: html_notebook
+output:
+  html_document: default
+  html_notebook: default
 ---
+
+```{r libraries}
+library(tidyverse)
+library(caret)
+```
+
+```{r load data}
+train_df <- read.csv("https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv")
+
+test_df <- read.csv("https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv")
+```
 
 ### How the Model Was Built
 
 ### Cross Validation 
+
+```{r split training df}
+in_training <- createDataPartition(train_df$classe, p = .70, list = F)
+training <- train_df[in_training, ]
+testing <- train_df[-in_training, ]
+```
 
 ### Expected Out of Sample Error 
 

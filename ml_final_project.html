@@ -120,11 +120,34 @@ $(document).ready(function () {
 </div>
 
 
+<pre class="r"><code>library(tidyverse)</code></pre>
+<pre><code>## Loading tidyverse: ggplot2
+## Loading tidyverse: tibble
+## Loading tidyverse: tidyr
+## Loading tidyverse: readr
+## Loading tidyverse: purrr
+## Loading tidyverse: dplyr</code></pre>
+<pre><code>## Conflicts with tidy packages ----------------------------------------------</code></pre>
+<pre><code>## filter(): dplyr, stats
+## lag():    dplyr, stats</code></pre>
+<pre class="r"><code>library(caret)</code></pre>
+<pre><code>## Loading required package: lattice</code></pre>
+<pre><code>## 
+## Attaching package: 'caret'</code></pre>
+<pre><code>## The following object is masked from 'package:purrr':
+## 
+##     lift</code></pre>
+<pre class="r"><code>train_df &lt;- read.csv(&quot;https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv&quot;)
+
+test_df &lt;- read.csv(&quot;https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv&quot;)</code></pre>
 <div id="how-the-model-was-built" class="section level3">
 <h3>How the Model Was Built</h3>
 </div>
 <div id="cross-validation" class="section level3">
 <h3>Cross Validation</h3>
+<pre class="r"><code>in_training &lt;- createDataPartition(train_df$classe, p = .70, list = F)
+training &lt;- train_df[in_training, ]
+testing &lt;- train_df[-in_training, ]</code></pre>
 </div>
 <div id="expected-out-of-sample-error" class="section level3">
 <h3>Expected Out of Sample Error</h3>
