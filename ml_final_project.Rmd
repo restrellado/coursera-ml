@@ -33,7 +33,7 @@ nzv <- nearZeroVar(train_df)
 train_df <- train_df[, -nzv]
 ```
 
-Apply the same cleaning method to the testing dataframe. 
+Apply the same cleaning method to the testing dataframe. Note that the training dataset and testing datset have the same variables with the exception of the last one, which is `classe` in the training dataset and `problem_id` in the testing dataset.
 
 ```{r}
 # Variables that are not likely predictors
@@ -51,6 +51,7 @@ test_df <- test_df[, -nzv]
 ## Cross Validation 
 
 ```{r split training df}
+set.seed(1)
 in_training <- createDataPartition(train_df$classe, p = .70, list = F)
 training <- train_df[in_training, ]
 testing <- train_df[-in_training, ]
@@ -59,16 +60,26 @@ testing <- train_df[-in_training, ]
 ## Classification Tree Model
 
 ```{r}
-fit_rpart <- train(classe ~ ., 
-                   method = "rpart", 
-                   preProcess = "pca", 
+fit_gbm <- train(classe ~ ., 
+                   method = "gbm",
+                   verbose = F,
                    data = training) 
+```
+
+```{r}
+fit_gbm$finalModel
 ```
 
 How does this model fit perform on the testing dataset? 
 
 ```{r}
-confusionMatrix(predict(fit_rpart, testing), testing$classe)
+confusionMatrix(predict(fit_gbm, testing), testing$classe)
+```
+
+Create a vector of predicted values using this model and the testing dataframe as it's input. 
+
+```{r}
+data.frame(number = c(1:20), pred = predict(fit_gbm, test_df))
 ```
 
 ## Expected Out of Sample Error 
