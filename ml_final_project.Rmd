@@ -6,8 +6,8 @@ output:
 ---
 
 ```{r libraries}
-library(tidyverse)
-library(caret)
+library(tidyverse, quietly = T)
+library(caret, quietly = T)
 ```
 
 ```{r load data}
@@ -16,9 +16,39 @@ train_df <- read.csv("https://d396qusza40orc.cloudfront.net/predmachlearn/pml-tr
 test_df <- read.csv("https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv")
 ```
 
-### How the Model Was Built
+## Cleaning the Data 
 
-### Cross Validation 
+Remove variables that likely do not predict the outcome based on their descriptions in the code book. Remove variables that have NAs for 90 percent or more of their values. Remove variables that have variations near zero. 
+
+```{r clean}
+# Variables that are not likely predictors
+train_df <- train_df[, -c(1:7)]
+
+# Variables that have over 90% NAs
+nas <- as.vector(which(colMeans(is.na(train_df)) >= .90, arr.ind = T))
+train_df <- train_df[, -nas]
+
+# Near zero values
+nzv <- nearZeroVar(train_df)
+train_df <- train_df[, -nzv]
+```
+
+Apply the same cleaning method to the testing dataframe. 
+
+```{r}
+# Variables that are not likely predictors
+test_df <- test_df[, -c(1:7)]
+
+# Variables that have over 90% NAs
+test_df <- test_df[, -nas]
+
+# Near zero values
+test_df <- test_df[, -nzv]
+```
+
+## How the Model Was Built
+
+## Cross Validation 
 
 ```{r split training df}
 in_training <- createDataPartition(train_df$classe, p = .70, list = F)
@@ -26,6 +56,21 @@ training <- train_df[in_training, ]
 testing <- train_df[-in_training, ]
 ```
 
-### Expected Out of Sample Error 
+## Classification Tree Model
 
-### Predictions on Test Cases
+```{r}
+fit_rpart <- train(classe ~ ., 
+                   method = "rpart", 
+                   preProcess = "pca", 
+                   data = training) 
+```
+
+How does this model fit perform on the testing dataset? 
+
+```{r}
+confusionMatrix(predict(fit_rpart, testing), testing$classe)
+```
+
+## Expected Out of Sample Error 
+
+## Predictions on Test Cases
