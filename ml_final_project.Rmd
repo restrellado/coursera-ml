@@ -8,6 +8,7 @@ output:
 ```{r libraries}
 library(tidyverse, quietly = T)
 library(caret, quietly = T)
+library(randomForest, quietly = T)
 ```
 
 ```{r load data}
@@ -57,7 +58,7 @@ training <- train_df[in_training, ]
 testing <- train_df[-in_training, ]
 ```
 
-## Classification Tree Model
+## Gradient Boosted Model
 
 ```{r}
 fit_gbm <- train(classe ~ ., 
@@ -80,6 +81,22 @@ Create a vector of predicted values using this model and the testing dataframe a
 
 ```{r}
 data.frame(number = c(1:20), pred = predict(fit_gbm, test_df))
+```
+
+## Random Forest Model
+
+```{r}
+fit_rf <- randomForest(classe ~ ., data = training) 
+```
+
+```{r}
+confusionMatrix(predict(fit_rf, testing), testing$classe)
+```
+
+Create a vector of predicted values using this model and the testing dataframe as it's input. 
+
+```{r}
+data.frame(number = c(1:20), pred = predict(fit_rf, test_df))
 ```
 
 ## Expected Out of Sample Error 
