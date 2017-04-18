@@ -120,7 +120,7 @@ $(document).ready(function () {
 </div>
 
 
-<pre class="r"><code>library(tidyverse)</code></pre>
+<pre class="r"><code>library(tidyverse, quietly = T)</code></pre>
 <pre><code>## Loading tidyverse: ggplot2
 ## Loading tidyverse: tibble
 ## Loading tidyverse: tidyr
@@ -130,30 +130,141 @@ $(document).ready(function () {
 <pre><code>## Conflicts with tidy packages ----------------------------------------------</code></pre>
 <pre><code>## filter(): dplyr, stats
 ## lag():    dplyr, stats</code></pre>
-<pre class="r"><code>library(caret)</code></pre>
-<pre><code>## Loading required package: lattice</code></pre>
+<pre class="r"><code>library(caret, quietly = T)</code></pre>
 <pre><code>## 
 ## Attaching package: 'caret'</code></pre>
 <pre><code>## The following object is masked from 'package:purrr':
 ## 
 ##     lift</code></pre>
+<pre class="r"><code>library(randomForest, quietly = T)</code></pre>
+<pre><code>## randomForest 4.6-12</code></pre>
+<pre><code>## Type rfNews() to see new features/changes/bug fixes.</code></pre>
+<pre><code>## 
+## Attaching package: 'randomForest'</code></pre>
+<pre><code>## The following object is masked from 'package:dplyr':
+## 
+##     combine</code></pre>
+<pre><code>## The following object is masked from 'package:ggplot2':
+## 
+##     margin</code></pre>
 <pre class="r"><code>train_df &lt;- read.csv(&quot;https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv&quot;)
 
 test_df &lt;- read.csv(&quot;https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv&quot;)</code></pre>
-<div id="how-the-model-was-built" class="section level3">
-<h3>How the Model Was Built</h3>
+<div id="cleaning-the-data" class="section level2">
+<h2>Cleaning the Data</h2>
+<p>Remove variables that likely do not predict the outcome based on their descriptions in the code book. Remove variables that have NAs for 90 percent or more of their values. Remove variables that have variations near zero.</p>
+<pre class="r"><code># Variables that are not likely predictors
+train_df &lt;- train_df[, -c(1:7)]
+
+# Variables that have over 90% NAs
+nas &lt;- as.vector(which(colMeans(is.na(train_df)) &gt;= .90, arr.ind = T))
+train_df &lt;- train_df[, -nas]
+
+# Near zero values
+nzv &lt;- nearZeroVar(train_df)
+train_df &lt;- train_df[, -nzv]</code></pre>
+<p>Apply the same cleaning method to the testing dataframe. Note that the training dataset and testing datset have the same variables with the exception of the last one, which is <code>classe</code> in the training dataset and <code>problem_id</code> in the testing dataset.</p>
+<pre class="r"><code># Variables that are not likely predictors
+test_df &lt;- test_df[, -c(1:7)]
+
+# Variables that have over 90% NAs
+test_df &lt;- test_df[, -nas]
+
+# Near zero values
+test_df &lt;- test_df[, -nzv]</code></pre>
 </div>
-<div id="cross-validation" class="section level3">
-<h3>Cross Validation</h3>
-<pre class="r"><code>in_training &lt;- createDataPartition(train_df$classe, p = .70, list = F)
+<div id="how-the-model-was-built" class="section level2">
+<h2>How the Model Was Built</h2>
+</div>
+<div id="cross-validation" class="section level2">
+<h2>Cross Validation</h2>
+<pre class="r"><code>set.seed(1)
+in_training &lt;- createDataPartition(train_df$classe, p = .70, list = F)
 training &lt;- train_df[in_training, ]
 testing &lt;- train_df[-in_training, ]</code></pre>
+<!-- ## Gradient Boosted Model -->
+<!-- ```{r} -->
+<!-- fit_gbm <- train(classe ~ .,  -->
+<!--                    method = "gbm", -->
+<!--                    verbose = F, -->
+<!--                    data = training)  -->
+<!-- ``` -->
+<!-- ```{r} -->
+<!-- fit_gbm$finalModel -->
+<!-- ``` -->
+<!-- How does this model fit perform on the testing dataset?  -->
+<!-- ```{r} -->
+<!-- confusionMatrix(predict(fit_gbm, testing), testing$classe) -->
+<!-- ``` -->
+<!-- Create a vector of predicted values using this model and the testing dataframe as it's input.  -->
+<!-- ```{r} -->
+<!-- data.frame(number = c(1:20), pred = predict(fit_gbm, test_df)) -->
+<!-- ``` -->
 </div>
-<div id="expected-out-of-sample-error" class="section level3">
-<h3>Expected Out of Sample Error</h3>
+<div id="random-forest-model" class="section level2">
+<h2>Random Forest Model</h2>
+<pre class="r"><code>fit_rf &lt;- randomForest(classe ~ ., data = training) </code></pre>
+<pre class="r"><code>confusionMatrix(predict(fit_rf, testing), testing$classe)</code></pre>
+<pre><code>## Confusion Matrix and Statistics
+## 
+##           Reference
+## Prediction    A    B    C    D    E
+##          A 1672    3    0    0    0
+##          B    1 1135    6    0    0
+##          C    0    1 1019    4    0
+##          D    0    0    1  958    3
+##          E    1    0    0    2 1079
+## 
+## Overall Statistics
+##                                           
+##                Accuracy : 0.9963          
+##                  95% CI : (0.9943, 0.9977)
+##     No Information Rate : 0.2845          
+##     P-Value [Acc &gt; NIR] : &lt; 2.2e-16       
+##                                           
+##                   Kappa : 0.9953          
+##  Mcnemar's Test P-Value : NA              
+## 
+## Statistics by Class:
+## 
+##                      Class: A Class: B Class: C Class: D Class: E
+## Sensitivity            0.9988   0.9965   0.9932   0.9938   0.9972
+## Specificity            0.9993   0.9985   0.9990   0.9992   0.9994
+## Pos Pred Value         0.9982   0.9939   0.9951   0.9958   0.9972
+## Neg Pred Value         0.9995   0.9992   0.9986   0.9988   0.9994
+## Prevalence             0.2845   0.1935   0.1743   0.1638   0.1839
+## Detection Rate         0.2841   0.1929   0.1732   0.1628   0.1833
+## Detection Prevalence   0.2846   0.1941   0.1740   0.1635   0.1839
+## Balanced Accuracy      0.9990   0.9975   0.9961   0.9965   0.9983</code></pre>
+<p>Create a vector of predicted values using this model and the testing dataframe as it’s input.</p>
+<pre class="r"><code>data.frame(number = c(1:20), pred = predict(fit_rf, test_df))</code></pre>
+<pre><code>##    number pred
+## 1       1    B
+## 2       2    A
+## 3       3    B
+## 4       4    A
+## 5       5    A
+## 6       6    E
+## 7       7    D
+## 8       8    B
+## 9       9    A
+## 10     10    A
+## 11     11    B
+## 12     12    C
+## 13     13    B
+## 14     14    A
+## 15     15    E
+## 16     16    E
+## 17     17    A
+## 18     18    B
+## 19     19    B
+## 20     20    B</code></pre>
 </div>
-<div id="predictions-on-test-cases" class="section level3">
-<h3>Predictions on Test Cases</h3>
+<div id="expected-out-of-sample-error" class="section level2">
+<h2>Expected Out of Sample Error</h2>
+</div>
+<div id="predictions-on-test-cases" class="section level2">
+<h2>Predictions on Test Cases</h2>
 </div>
 
 
