@@ -6,6 +6,7 @@ output:
 ---
 
 ```{r libraries}
+library(plyr, quietly = T)
 library(tidyverse, quietly = T)
 library(caret, quietly = T)
 library(randomForest, quietly = T)
@@ -47,6 +48,8 @@ test_df <- test_df[, -nas]
 test_df <- test_df[, -nzv]
 ```
 
+## Cross Validation 
+
 We'll use the `train_df` dataset to build training, testing, and validation datasets. 
 
 ```{r split training df}
@@ -75,24 +78,42 @@ ggplot(data = training, aes(x = total_accel_belt, y = total_accel_arm, color = c
 
 ## How the Model Was Built
 
-## Cross Validation 
-
 ## Random Forest Model
 
 ```{r}
 fit_rf <- randomForest(classe ~ ., data = training) 
 ```
 
+What is the accuracy level of this model when predicting using the testing dataset?
+
 ```{r}
 confusionMatrix(predict(fit_rf, testing), testing$classe)
 ```
+
+## Bagging Model
+
+```{r}
+fit_bag <- train(classe ~ ., method = "treebag", data = training)
+```
+
+What is the accuracy level of this model when predicting using the testing dataset?
+
+```{r}
+confusionMatrix(predict(fit_bag, testing), testing$classe)
+```
+
+## Expected Out of Sample Error 
+
+We can estimate the out of sample error of the random forest model by predicting `classe` using the validation dataset. 
+
+```{r}
+confusionMatrix(predict(fit_rf, validation), validation$classe)
+```
+
+## Predictions on Test Cases
 
 Create a vector of predicted values using this model and the testing dataframe as it's input. 
 
 ```{r}
 data.frame(number = c(1:20), pred = predict(fit_rf, test_df))
 ```
-
-## Expected Out of Sample Error 
-
-## Predictions on Test Cases
