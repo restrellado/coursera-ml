@@ -1,15 +1,21 @@
 ---
-title: "R Notebook"
+title: "Coursera Practical Machine Learning Final Project"
+author: "Ryan Estrellado"
 output:
   html_document: default
   html_notebook: default
 ---
 
-```{r libraries}
+```{r message = F}
 library(plyr, quietly = T)
 library(tidyverse, quietly = T)
 library(caret, quietly = T)
 library(randomForest, quietly = T)
+library(knitr, quietly = T)
+```
+
+```{r message = F, warning = F}
+opts_chunk$set(warning = F)
 ```
 
 ```{r load data}
@@ -50,7 +56,7 @@ test_df <- test_df[, -nzv]
 
 ## Cross Validation 
 
-We'll use the `train_df` dataset to build training, testing, and validation datasets. 
+We'll use the `train_df` dataset to build training, testing, and validation datasets. We'll train two models on the training dataset and will test each one on the testing dataset. The accuracy results from the two testing set predictions will be used for model selection. The final model will then be tested on the validation set.
 
 ```{r split training df}
 set.seed(1)
@@ -66,25 +72,35 @@ testing <- build_data[-in_training, ]
 
 ## Exploration 
 
+This is a distribution of the factors contained in `classe`. There are more instances of `A` compared to the other levels, but there appear to be enough instances of the other levels to train the model. 
+
 ```{r}
 ggplot(data = training, aes(x = classe)) + 
-  geom_histogram(stat = "count")
+  geom_histogram(stat = "count") + 
+  labs(title = "Distribution of Classe Levels")
 ```
+
+Is there any evidence that  `total_accel_belt` and `total_accel_arm` explain the variation in the `classe` variable? `total_accel_belt` values above 20 appear to be mostly `E`s. Similarly, `total_accel_belt` values between 5 and 10 appear to be mostly `D`s.
 
 ```{r}
 ggplot(data = training, aes(x = total_accel_belt, y = total_accel_arm, color = classe)) + 
-  geom_point(alpha = .5, size = 2)
+  geom_point(alpha = .25, size = 2) + 
+  labs(title = "total_accel_belt vs total_accel_arm")
 ```
 
 ## How the Model Was Built
 
+Before selecting a final model, I fit a random forest model and a bagging model on the `training` set and tested each model fit using the `testing` set. I used accuracy as the score to evaluate the effectiveness each model. I selected the model with the best accuracy and predicted results and estimate of out of sample error using the validation dataset. 
+
 ## Random Forest Model
+
+The first model is a random forest model: 
 
 ```{r}
 fit_rf <- randomForest(classe ~ ., data = training) 
 ```
 
-What is the accuracy level of this model when predicting using the testing dataset?
+This model was .9925 accurate in predicting `classe` using the testing model. 
 
 ```{r}
 confusionMatrix(predict(fit_rf, testing), testing$classe)
@@ -92,11 +108,13 @@ confusionMatrix(predict(fit_rf, testing), testing$classe)
 
 ## Bagging Model
 
-```{r}
+The next model was fit using the bagging algorithm. 
+
+```{r message = F}
 fit_bag <- train(classe ~ ., method = "treebag", data = training)
 ```
 
-What is the accuracy level of this model when predicting using the testing dataset?
+This model was .9784 accurate in predicting `classe` using the testing model. 
 
 ```{r}
 confusionMatrix(predict(fit_bag, testing), testing$classe)
@@ -104,15 +122,17 @@ confusionMatrix(predict(fit_bag, testing), testing$classe)
 
 ## Expected Out of Sample Error 
 
-We can estimate the out of sample error of the random forest model by predicting `classe` using the validation dataset. 
+Based on these results I've selected the random forest model. We can estimate the out of sample error of the random forest model by predicting `classe` using the validation dataset. 
 
 ```{r}
 confusionMatrix(predict(fit_rf, validation), validation$classe)
 ```
 
-## Predictions on Test Cases
+The estimated out of sample accuracy is .9913, which suggests an error rate of `r 100 - .9913`.
 
-Create a vector of predicted values using this model and the testing dataframe as it's input. 
+## Predictions On `test_df`
+
+Finally, we'll use the random forest model fit to create a vector of predicted values using the testing dataframe as it's input. 
 
 ```{r}
 data.frame(number = c(1:20), pred = predict(fit_rf, test_df))
