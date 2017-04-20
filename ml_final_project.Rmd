@@ -18,15 +18,37 @@ library(knitr, quietly = T)
 opts_chunk$set(warning = F)
 ```
 
+## Purpose 
+
+The purpose of this analysis is to fit a machine learning model to training data taken from fitness sensors to classify which activity was being performed during each observation. 
+
+## About the Data 
+
+The training and testing datasets can be found here: 
+  
+* [Training dataset](https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv)  
+
+* [Testing dataset](https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv)
+
 ```{r load data}
 train_df <- read.csv("https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv")
 
 test_df <- read.csv("https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv")
 ```
 
-## Cleaning the Data 
+The datasets have values taken from each sensor and information about when the data was recorded. 
 
-Remove variables that likely do not predict the outcome based on their descriptions in the code book. Remove variables that have NAs for 90 percent or more of their values. Remove variables that have variations near zero. 
+```{r}
+dim(train_df)
+```
+
+```{r}
+dim(test_df)
+```
+
+## Cleaning the Data and Feature Selection
+
+We'll remove variables that likely do not predict the outcome based on their descriptions in the code book. We'll also remove variables that have NAs for 90 percent or more of their values. Lastly, we'll remove variables that have variations near zero. 
 
 ```{r clean}
 # Variables that are not likely predictors
@@ -41,7 +63,7 @@ nzv <- nearZeroVar(train_df)
 train_df <- train_df[, -nzv]
 ```
 
-Apply the same cleaning method to the testing dataframe. Note that the training dataset and testing datset have the same variables with the exception of the last one, which is `classe` in the training dataset and `problem_id` in the testing dataset.
+We'll apply the same cleaning method to the testing dataframe. Note that the training dataset and testing datset have the same variables with the exception of the last one, which is `classe` in the training dataset and `problem_id` in the testing dataset.
 
 ```{r}
 # Variables that are not likely predictors
@@ -54,7 +76,7 @@ test_df <- test_df[, -nas]
 test_df <- test_df[, -nzv]
 ```
 
-## Cross Validation 
+## Cross Validation Method
 
 We'll use the `train_df` dataset to build training, testing, and validation datasets. We'll train two models on the training dataset and will test each one on the testing dataset. The accuracy results from the two testing set predictions will be used for model selection. The final model will then be tested on the validation set.
 
