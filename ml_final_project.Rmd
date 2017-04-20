@@ -80,7 +80,7 @@ ggplot(data = training, aes(x = classe)) +
   labs(title = "Distribution of Classe Levels")
 ```
 
-Is there any evidence that  `total_accel_belt` and `total_accel_arm` explain the variation in the `classe` variable? `total_accel_belt` values above 20 appear to be mostly `E`s. Similarly, `total_accel_belt` values between 5 and 10 appear to be mostly `D`s.
+Is there any evidence that  `total_accel_belt` and `total_accel_arm` explain the variation in the `classe` variable? `total_accel_belt` values above 20 appear to be mostly Es. Similarly, `total_accel_belt` values between 5 and 10 appear to be mostly Ds.
 
 ```{r}
 ggplot(data = training, aes(x = total_accel_belt, y = total_accel_arm, color = classe)) + 
@@ -90,7 +90,7 @@ ggplot(data = training, aes(x = total_accel_belt, y = total_accel_arm, color = c
 
 ## How the Model Was Built
 
-Before selecting a final model, I fit a random forest model and a bagging model on the `training` set and tested each model fit using the `testing` set. I used accuracy as the score to evaluate the effectiveness each model. I selected the model with the best accuracy and predicted results and estimate of out of sample error using the validation dataset. 
+Before selecting a final model, I fit a random forest model and a bagging model on the `training` set and tested each model fit using the `testing` set. I used accuracy as the score to evaluate the effectiveness of each model. I selected the model with the best accuracy and predicted results and estimate of out of sample error using the validation dataset. 
 
 ## Random Forest Model
 
