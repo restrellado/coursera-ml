@@ -128,12 +128,29 @@ library(caret, quietly = T)
 library(randomForest, quietly = T)
 library(knitr, quietly = T)</code></pre>
 <pre class="r"><code>opts_chunk$set(warning = F)</code></pre>
+<div id="purpose" class="section level2">
+<h2>Purpose</h2>
+<p>The purpose of this analysis is to fit a machine learning model to training data taken from fitness sensors to classify which activity was being performed during each observation.</p>
+</div>
+<div id="about-the-data" class="section level2">
+<h2>About the Data</h2>
+<p>The training and testing datasets can be found here:</p>
+<ul>
+<li><p><a href="https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv">Training dataset</a></p></li>
+<li><p><a href="https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv">Testing dataset</a></p></li>
+</ul>
 <pre class="r"><code>train_df &lt;- read.csv(&quot;https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv&quot;)
 
 test_df &lt;- read.csv(&quot;https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv&quot;)</code></pre>
-<div id="cleaning-the-data" class="section level2">
-<h2>Cleaning the Data</h2>
-<p>Remove variables that likely do not predict the outcome based on their descriptions in the code book. Remove variables that have NAs for 90 percent or more of their values. Remove variables that have variations near zero.</p>
+<p>The datasets have values taken from each sensor and information about when the data was recorded.</p>
+<pre class="r"><code>dim(train_df)</code></pre>
+<pre><code>## [1] 19622   160</code></pre>
+<pre class="r"><code>dim(test_df)</code></pre>
+<pre><code>## [1]  20 160</code></pre>
+</div>
+<div id="cleaning-the-data-and-feature-selection" class="section level2">
+<h2>Cleaning the Data and Feature Selection</h2>
+<p>We’ll remove variables that likely do not predict the outcome based on their descriptions in the code book. We’ll also remove variables that have NAs for 90 percent or more of their values. Lastly, we’ll remove variables that have variations near zero.</p>
 <pre class="r"><code># Variables that are not likely predictors
 train_df &lt;- train_df[, -c(1:7)]
 
@@ -144,7 +161,7 @@ train_df &lt;- train_df[, -nas]
 # Near zero values
 nzv &lt;- nearZeroVar(train_df)
 train_df &lt;- train_df[, -nzv]</code></pre>
-<p>Apply the same cleaning method to the testing dataframe. Note that the training dataset and testing datset have the same variables with the exception of the last one, which is <code>classe</code> in the training dataset and <code>problem_id</code> in the testing dataset.</p>
+<p>We’ll apply the same cleaning method to the testing dataframe. Note that the training dataset and testing datset have the same variables with the exception of the last one, which is <code>classe</code> in the training dataset and <code>problem_id</code> in the testing dataset.</p>
 <pre class="r"><code># Variables that are not likely predictors
 test_df &lt;- test_df[, -c(1:7)]
 
@@ -154,8 +171,8 @@ test_df &lt;- test_df[, -nas]
 # Near zero values
 test_df &lt;- test_df[, -nzv]</code></pre>
 </div>
-<div id="cross-validation" class="section level2">
-<h2>Cross Validation</h2>
+<div id="cross-validation-method" class="section level2">
+<h2>Cross Validation Method</h2>
 <p>We’ll use the <code>train_df</code> dataset to build training, testing, and validation datasets. We’ll train two models on the training dataset and will test each one on the testing dataset. The accuracy results from the two testing set predictions will be used for model selection. The final model will then be tested on the validation set.</p>
 <pre class="r"><code>set.seed(1)
 
